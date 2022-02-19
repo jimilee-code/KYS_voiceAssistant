@@ -11,3 +11,5 @@ DESCRIPTION :
   simple to use, one-click to list and hear up-to-date headlines on 3 major news sites.
 - W3BS.py :
   obsolete python2.7 version of W3BS_py3.py
+
+* all file location references are hard coded to '/home/deusxmachina/' (NEEDS CHANGING TO RELATIVE FILE REFERENCING)

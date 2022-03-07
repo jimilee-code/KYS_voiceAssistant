@@ -13,3 +13,5 @@ DESCRIPTION :
   obsolete python2.7 version of W3BS_py3.py
 
 * all file location references are hard coded to '/home/deusxmachina/' (NEEDS CHANGING TO RELATIVE FILE REFERENCING)
+
+[*] March 7 2022. Added functioning eviltwin attack to KYS_nkb.py
